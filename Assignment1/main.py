@@ -1,10 +1,10 @@
-import lattice
 import matplotlib.pyplot as plt
 import numpy as np
-
 from matplotlib import cm
 # noinspection PyUnresolvedReferences
 from mpl_toolkits.mplot3d import Axes3D  # NOQA
+
+import lattice
 
 
 def visualize_simple_walk():
@@ -14,7 +14,7 @@ def visualize_simple_walk():
                         beta=0.5,
                         diffusion_rate=0.5,
                         gamma=0)
-    l.run_simulation(plot_during=True, plot_final=False)
+    l.run_simulation(plot=True)
 
 
 def detailed_plot_of_single_run():
@@ -24,7 +24,7 @@ def detailed_plot_of_single_run():
                         beta=0.5,
                         diffusion_rate=0.5,
                         gamma=0.005)
-    l.run_simulation(plot_during=True, plot_final=True)
+    l.run_simulation(plot=True)
 
 
 def _run_simulation(beta, r_0, diff_rate, iterations=5):
@@ -40,7 +40,7 @@ def _run_simulation(beta, r_0, diff_rate, iterations=5):
     for i in range(iterations):
         print("    iteration %s..." % i)
         l.reset()
-        tmp_r_inf = l.run_simulation(plot_during=False, plot_final=False)
+        tmp_r_inf = l.run_simulation(plot=False)
         print("        %s" % tmp_r_inf)
         r_inf += tmp_r_inf
     avg_r_inf = r_inf / iterations
@@ -48,28 +48,33 @@ def _run_simulation(beta, r_0, diff_rate, iterations=5):
     return avg_r_inf
 
 
-def plot_epidemic_thresholds(beta):
+def plot_epidemic_thresholds(betas, resolution, iterations):
     diff_rate = 0.3
-    r_0s = []
-    r_infs = []
-    for r_0 in np.linspace(0, 200, num=20):
-        print("running with beta: %s and r_0: %s" % (beta, r_0))
-        r_inf = _run_simulation(beta, r_0, diff_rate, iterations=5)
-        print(r_inf)
-        r_0s.append(r_0)
-        r_infs.append(r_inf)
-    print(r_0s, r_infs)
-    plt.plot(r_0s, r_infs)
+    lines = []
+    for (i, beta) in enumerate(betas):
+        r_0s = []
+        r_infs = []
+        for r_0 in np.linspace(0, 200, num=resolution):
+            print("running with beta: %s and r_0: %s" % (beta, r_0))
+            r_inf = _run_simulation(beta, r_0, diff_rate,
+                                    iterations=iterations)
+            print(r_inf)
+            r_0s.append(r_0)
+            r_infs.append(r_inf)
+        print(r_0s, r_infs)
+        lines.append(plt.plot(r_0s, r_infs))
+    plt.legend([r'$\beta=%s$' % beta for beta in betas])
     plt.xlabel(r'$R_0$')
     plt.ylabel(r'$R_{\inf}$')
-    plt.title(r'd=%s $\beta$=%s' % (diff_rate, beta))
+    plt.title(r'd=%s' % (diff_rate))
+    plt.savefig('beta_lines.pdf')
     plt.show()
 
 
 def plot_surface(beta_resolution, r0_resolution, iterations):
     beta_resolution *= 1j
     beta_resolution *= 1j
-    BETA, R_0 = np.mgrid[0.01:1:beta_resolution, 0.01:250:r0_resolution]
+    BETA, R_0 = np.mgrid[0.01:1:beta_resolution, 0.01:100:r0_resolution]
     BETA = BETA.T
     R_0 = R_0.T
 
@@ -85,7 +90,7 @@ def plot_surface(beta_resolution, r0_resolution, iterations):
     # Plot the surface.
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    surf = ax.plot_surface(BETA, R_0, R_INF, cmap=cm.gray,
+    surf = ax.plot_surface(BETA, R_0, R_INF, cmap=cm.coolwarm,
                            linewidth=0, antialiased=False)
     # Add a color bar which maps values to colors.
     fig.colorbar(surf, shrink=0.5, aspect=5)
@@ -99,6 +104,6 @@ def plot_surface(beta_resolution, r0_resolution, iterations):
 
 
 if __name__ == '__main__':
-    plot_epidemic_thresholds(beta=0.8)
-    #    detailed_plot_of_single_run()
+    plot_epidemic_thresholds(betas=[0.3, 0.8], resolution=20, iterations=10)
+    # detailed_plot_of_single_run()
     # plot_surface(beta_resolution=10,r0_resolution=20, iterations=2)
