@@ -14,17 +14,17 @@ def visualize_simple_walk():
                         beta=0.5,
                         diffusion_rate=0.5,
                         gamma=0)
-    l.run_simulation(plot=True)
+    l.run_simulation(plot=True, optimize=False, plotstep=1)
 
 
-def detailed_plot_of_single_run():
-    l = lattice.Lattice(length=100,
-                        num_total_individuals=1000,
-                        num_infected=10,
+def detailed_plot_of_single_run(length=100, ind=1000, infected=10):
+    l = lattice.Lattice(length=length,
+                        num_total_individuals=ind,
+                        num_infected=infected,
                         beta=0.5,
                         diffusion_rate=0.5,
-                        gamma=0.005)
-    l.run_simulation(plot=True)
+                        gamma=0.017)
+    l.run_simulation(plot=True, optimize=False)
 
 
 def _run_simulation(beta, r_0, diff_rate, iterations=5):
@@ -104,6 +104,8 @@ def plot_surface(beta_resolution, r0_resolution, iterations):
 
 
 if __name__ == '__main__':
-    plot_epidemic_thresholds(betas=[0.3, 0.8], resolution=20, iterations=10)
+    visualize_simple_walk()
+    # detailed_plot_of_single_run(length=20, ind=100, infected=2)
     # detailed_plot_of_single_run()
-    # plot_surface(beta_resolution=10,r0_resolution=20, iterations=2)
+    # plot_epidemic_thresholds(betas=[0.2, 0.5], resolution=20, iterations=10)
+    # plot_surface(beta_resolution=10,r0_resolution=10, iterations=3)

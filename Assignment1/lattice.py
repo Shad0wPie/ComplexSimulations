@@ -37,7 +37,7 @@ class Lattice(object):
                 y = np.random.randint(0, self.length)
                 self.lattice[x, y, 0] += 1
 
-    def run_simulation(self, optimize=True, plot=False):
+    def run_simulation(self, optimize=True, plot=False, plotstep=20):
         i = 0
         susceptibles = []
         infected = []
@@ -45,10 +45,12 @@ class Lattice(object):
 
         if plot:
             plt.ion()
-            fig = plt.figure(figsize=[8,4])
+            fig = plt.figure(figsize=[8, 4])
+
             subplot1 = fig.add_subplot(121)
             points = subplot1.plot([], [], 'b.', [], [], 'r.', [], [], 'g.')
             subplot1.axis([1, self.length, 1, self.length])
+
             subplot2 = fig.add_subplot(122)
             lines = subplot2.plot([], [], 'b-', [], [], 'r-', [], [], 'g-')
             subplot2.set_ylim([0, 1])
@@ -56,14 +58,19 @@ class Lattice(object):
             subplot2.legend([lines[0], lines[1], lines[2]], ['Susceptible',
                                                              'Infected',
                                                              'Recovered'])
+            subplot2.set_xlabel(r'Time')
+            subplot2.set_ylabel(r'Population density')
+            subplot2.set_title(r'd=%s, $\beta$=%s, $\gamma$=%s' %
+                               (self.diffusion_rate, self.beta, self.gamma))
+
             fig.canvas.manager.show()
 
         while self.num_infected:
-            if self.num_susceptible:
+            if self.num_susceptible or (not optimize):
                 self.random_walk(optimize=optimize)
                 self.check_infection()
-                if plot and i % 20 == 0:
-                    self.plot(points, lines)
+                if plot and i % plotstep == 0:
+                    self.plot(points, lines, i)
                     subplot2.relim()
                     subplot2.autoscale_view(True, True, True)
                     fig.canvas.draw()
@@ -79,21 +86,20 @@ class Lattice(object):
             infected.append(self.num_infected)
             recovered.append(self.num_recovered)
             i += 1
-
+        print('        simulation completed after %s time steps' % i)
         if plot:
-            plt.show()
+            plt.show(block=True)
         return self.num_recovered / self.num_individuals
 
-    def plot(self, points, lines):
+    def plot(self, points, lines, iteration_number):
         for i in range(3):
             inds = np.nonzero(self.lattice[:, :, i])
-            points[i].set_data(inds)
+            points[i].set_data(inds[0]+1, inds[1]+1)
             count = self.num_susceptible if i == 0 else self.num_infected if \
                 i == 1 else self.num_recovered
             count /= self.num_individuals
             xdata = lines[i].get_xdata()
-            next_xdata = xdata[-1] + 1 if len(xdata) > 0 else 0
-            lines[i].set_xdata(np.append(xdata, next_xdata))
+            lines[i].set_xdata(np.append(xdata, iteration_number))
             lines[i].set_ydata(np.append(lines[i].get_ydata(), count))
 
     def random_walk(self, optimize):
