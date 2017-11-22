@@ -11,6 +11,7 @@ numpy = "*"
 matplotlib = "==2.1.0rc1"
 ipython = "*"
 yappi = "*"
+scipy = "*"
 
 
 [requires]
